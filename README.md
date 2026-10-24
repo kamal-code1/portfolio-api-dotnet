@@ -15,7 +15,7 @@ API REST en ASP.NET Core 8 qui fournit les données d'un portfolio de développe
 | Méthode | Route | Auth |
 |---|---|---|
 | POST | `/api/auth/login` | — |
-| POST | `/api/auth/register` | — |
+| POST | `/api/auth/register` | Désactivé par défaut |
 | GET | `/api/portfolio/projets` | — |
 | POST / DELETE | `/api/portfolio/projets`, `/api/portfolio/projets/{id}` | JWT (Admin) |
 | GET | `/api/portfolio/competences`, `/api/portfolio/competences/grouped` | — |
@@ -32,10 +32,26 @@ Aucun secret n'est versionné. L'application refuse de démarrer si la connexion
 
 | Clé | Variable d'environnement | Description |
 |---|---|---|
-| `ConnectionStrings:DefaultConnection` | `ConnectionStrings__DefaultConnection` | Chaîne de connexion PostgreSQL |
+| `ConnectionStrings:DefaultConnection` | `ConnectionStrings__DefaultConnection` | Chaîne PostgreSQL, ou `Data Source=<fichier>.db` pour SQLite |
 | `Jwt:Key` | `Jwt__Key` | Clé de signature, 32 caractères minimum |
+| `Email:Provider` | `Email__Provider` | `Resend` (API HTTP) ou `Smtp` (ex. Gmail) |
+| `Email:To` | `Email__To` | Adresse qui reçoit les messages du formulaire |
+| `Email:ResendApiKey` | `Email__ResendApiKey` | Clé API Resend (si `Resend`) |
+| `Email:From` | `Email__From` | Optionnel, défaut `Portfolio <onboarding@resend.dev>` |
+| `Email:SmtpUser` / `Email:SmtpPassword` | `Email__SmtpUser` / `Email__SmtpPassword` | Si `Smtp` : compte et mot de passe d'application Gmail |
 | `Admin:Email` | `Admin__Email` | Optionnel : compte admin créé au premier démarrage |
 | `Admin:Password` | `Admin__Password` | Optionnel : mot de passe de ce compte |
+| `Auth:AllowRegistration` | `Auth__AllowRegistration` | Optionnel, `false` par défaut : désactive `/api/auth/register` |
+
+## Formulaire de contact
+
+Le site public (`wwwroot/`) envoie le formulaire à `POST /api/portfolio/messages`. Le message est enregistré, puis transmis par e-mail. Le visiteur ne voit un succès que si les deux étapes ont réussi.
+
+Protections : validation des champs (longueurs, format e-mail), corps limité à 16 Ko, champ piège anti-robots, 5 envois par IP toutes les 15 minutes, e-mail en texte brut avec sujet sur une ligne (pas d'injection d'en-têtes), en-têtes de sécurité (CSP, nosniff, X-Frame-Options). La lecture des messages est réservée au rôle Admin.
+
+## Déploiement (Render, offre gratuite)
+
+`render.yaml` décrit un service web Docker. Dans Render : **New › Blueprint**, sélectionner ce dépôt, puis saisir `Email__To` et `Email__ResendApiKey`. `Jwt__Key` est générée automatiquement. Par défaut, la base SQLite du conteneur est réinitialisée à chaque redéploiement. Pour la conserver, utilisez une base PostgreSQL externe.
 
 En local, avec les secrets utilisateur .NET :
 
@@ -60,7 +76,7 @@ Avec Docker :
 
 ```bash
 docker build -t portfolio-api .
-docker run -p 7000:7000 -e ASPNETCORE_URLS=http://+:7000 -e ConnectionStrings__DefaultConnection="..." -e Jwt__Key="..." portfolio-api
+docker run -p 10000:10000 -e ConnectionStrings__DefaultConnection="Data Source=/tmp/portfolio.db" -e Jwt__Key="..." -e Email__Provider=Resend -e Email__To="..." -e Email__ResendApiKey="..." portfolio-api
 ```
 
 ## Auteur

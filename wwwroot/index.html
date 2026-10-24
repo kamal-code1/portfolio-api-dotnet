@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kamal Drissi El-Bouzaidi — Développeur Full Stack</title>
+  <meta name="description" content="Développeur Full Stack junior : C# / ASP.NET Core, React, TypeScript, API REST, PostgreSQL. Casablanca – Mohammedia.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav container">
+      <a class="brand" href="#top">Kamal Drissi</a>
+      <ul class="nav-links">
+        <li><a href="#apropos">À propos</a></li>
+        <li><a href="#competences">Compétences</a></li>
+        <li><a href="#projets">Projets</a></li>
+        <li><a href="#parcours">Parcours</a></li>
+        <li><a href="#contact" class="nav-cta">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero container">
+      <p class="eyebrow">Casablanca – Mohammedia · Hybride ou à distance</p>
+      <h1>Kamal Drissi El-Bouzaidi</h1>
+      <p class="lead">Développeur Full Stack junior. Je conçois des applications web et des API REST avec <strong>C# / ASP.NET Core</strong> côté back-end et <strong>React / TypeScript</strong> côté front-end.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#contact">Me contacter</a>
+        <a class="btn" href="https://github.com/kamal-code1" target="_blank" rel="noopener">GitHub</a>
+        <a class="btn" href="https://www.linkedin.com/in/kamal-drissi-el-bouzaidi-16a8b2283/" target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </section>
+
+    <section id="apropos" class="container section">
+      <h2>À propos</h2>
+      <p>Diplômé Technicien Spécialisé en Développement Informatique (IGIC Mohammedia, mention), j'ai suivi un Bachelor Développement Full Stack C# / ASP.NET Core. Je recherche un poste de développeur Full Stack junior, un stage (rémunéré ou de pré-embauche) ou des missions freelance adaptées à mon niveau.</p>
+    </section>
+
+    <section id="competences" class="container section">
+      <h2>Compétences</h2>
+      <ul id="skills" class="chips" aria-live="polite">
+        <li>C# / .NET</li><li>ASP.NET Core</li><li>API REST</li><li>React</li><li>TypeScript</li>
+        <li>JavaScript</li><li>Node.js</li><li>PostgreSQL</li><li>SQL</li><li>JWT</li><li>Docker</li><li>Git / GitHub</li>
+      </ul>
+    </section>
+
+    <section id="projets" class="container section">
+      <h2>Projets</h2>
+      <div class="cards">
+        <article class="card">
+          <h3>PortfolioAPI</h3>
+          <p>L'API qui fait tourner ce site : ASP.NET Core 8, Entity Framework Core, PostgreSQL / SQLite, authentification JWT avec rôles, limitation de débit et envoi des messages de contact par e-mail.</p>
+          <ul class="tags"><li>ASP.NET Core 8</li><li>EF Core</li><li>JWT</li><li>Docker</li></ul>
+          <a href="https://github.com/kamal-code1/portfolio-api-dotnet" target="_blank" rel="noopener">Code source →</a>
+        </article>
+        <article class="card">
+          <h3>AquaFeed Smart</h3>
+          <p>Plateforme IoT de supervision et d'irrigation automatisée pour une culture hydroponique : API Node.js/Express en TypeScript, dashboard React, MQTT, PostgreSQL et service de Machine Learning Python/FastAPI. Testée en simulation ; validation sur matériel réel à venir.</p>
+          <ul class="tags"><li>React</li><li>Node.js</li><li>TypeScript</li><li>PostgreSQL</li><li>FastAPI</li></ul>
+          <a href="https://github.com/kamal-code1/aquafeed-smart" target="_blank" rel="noopener">Code source →</a>
+        </article>
+      </div>
+    </section>
+
+    <section id="parcours" class="container section">
+      <h2>Parcours</h2>
+      <ol class="timeline">
+        <li>
+          <h3>Stage Développeur Full Stack C# / ASP.NET Core 8 — Pernod Ricard</h3>
+          <p class="meta">Mars – juillet 2026 · À distance</p>
+          <p>Fonctionnalités back-end, logique métier, intégration d'API, tests et correction d'anomalies.</p>
+        </li>
+        <li>
+          <h3>Stages en développement Full Stack — IBM (Casablanca) et GROP Mohammedia</h3>
+          <p class="meta">2023</p>
+          <p>Interfaces React, API REST, opérations CRUD, Git/GitHub, méthode Agile.</p>
+        </li>
+        <li>
+          <h3>Bachelor Développement Full Stack C# / ASP.NET Core — IGIC Mohammedia</h3>
+          <p class="meta">2025 – 2026</p>
+        </li>
+        <li>
+          <h3>Technicien Spécialisé en Développement Informatique — IGIC Mohammedia</h3>
+          <p class="meta">2023 – 2025 · Diplôme validé avec mention</p>
+        </li>
+      </ol>
+    </section>
+
+    <section id="contact" class="container section">
+      <h2>Contact</h2>
+      <p>Une offre, un stage ou une mission ? Écrivez-moi, je réponds rapidement.</p>
+      <form id="contact-form" class="contact-form" novalidate>
+        <div class="field">
+          <label for="nom">Nom</label>
+          <input id="nom" name="nom" type="text" autocomplete="name" required minlength="2" maxlength="100">
+        </div>
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input id="email" name="email" type="email" autocomplete="email" required maxlength="200">
+        </div>
+        <div class="field full">
+          <label for="sujet">Sujet</label>
+          <input id="sujet" name="sujet" type="text" required minlength="3" maxlength="150">
+        </div>
+        <div class="field full">
+          <label for="contenu">Message</label>
+          <textarea id="contenu" name="contenu" rows="6" required minlength="10" maxlength="5000"></textarea>
+        </div>
+        <div class="hp" aria-hidden="true">
+          <label for="website">Ne pas remplir</label>
+          <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+        </div>
+        <div class="field full">
+          <button class="btn btn-primary" type="submit" id="submit-btn">Envoyer</button>
+          <p id="form-status" class="form-status" role="status" aria-live="polite"></p>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p class="container">© 2026 Kamal Drissi El-Bouzaidi · <a href="https://github.com/kamal-code1/portfolio-api-dotnet" target="_blank" rel="noopener">Code du site</a></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

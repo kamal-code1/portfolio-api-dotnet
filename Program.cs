@@ -1,21 +1,30 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PortfolioAPI.Data;
 using PortfolioAPI.Models;
+using PortfolioAPI.Services;
 using System.Text;
 using System.Text.Json;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuration PostgreSQL (pour Docker)
+// Base de données : PostgreSQL, ou SQLite si la chaîne commence par "Data Source="
 // Secrets fournis par user-secrets ou variables d'environnement (voir README)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
     throw new InvalidOperationException("ConnectionStrings:DefaultConnection manquant (variable ConnectionStrings__DefaultConnection).");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+{
+    if (connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
+        options.UseSqlite(connectionString);
+    else
+        options.UseNpgsql(connectionString);
+});
 
 // Configuration JSON pour accepter camelCase (comme React)
 builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
@@ -65,19 +74,72 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Envoi des messages de contact par e-mail
+builder.Services.AddHttpClient("resend", c => c.Timeout = TimeSpan.FromSeconds(15));
+builder.Services.AddScoped<IEmailSender, EmailSender>();
+
+// Hébergement derrière un proxy (Render) : IP client et schéma HTTPS réels
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.ForwardLimit = 1;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+// Limitation par IP : formulaire de contact et authentification
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, ct) =>
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new { success = false, message = "Trop de requêtes. Réessayez dans quelques minutes." }, ct);
+
+    void AddIpPolicy(string name, int permits, TimeSpan window) =>
+        options.AddPolicy(name, http => RateLimitPartition.GetFixedWindowLimiter(
+            http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = permits, Window = window, QueueLimit = 0 }));
+
+    AddIpPolicy("contact", 5, TimeSpan.FromMinutes(15));
+    AddIpPolicy("auth", 10, TimeSpan.FromMinutes(15));
+});
+
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseHsts();
+}
+
+// En-têtes de sécurité pour le site statique et l'API
+app.Use(async (context, next) =>
+{
+    var h = context.Response.Headers;
+    h["X-Content-Type-Options"] = "nosniff";
+    h["X-Frame-Options"] = "DENY";
+    h["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    if (!context.Request.Path.StartsWithSegments("/swagger"))
+        h["Content-Security-Policy"] = "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'";
+    await next();
+});
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseCors("AllowFrontend");
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapControllers();
 
 // Seed Data - Initialiser les données

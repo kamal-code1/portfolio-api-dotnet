@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using PortfolioAPI.Data;
 using PortfolioAPI.Models;
+using PortfolioAPI.Services;
 using System.Security.Claims;
 
 namespace PortfolioAPI.Controllers;
@@ -12,10 +14,14 @@ namespace PortfolioAPI.Controllers;
 public class PortfolioController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IEmailSender _emailSender;
+    private readonly ILogger<PortfolioController> _logger;
 
-    public PortfolioController(AppDbContext context)
+    public PortfolioController(AppDbContext context, IEmailSender emailSender, ILogger<PortfolioController> logger)
     {
         _context = context;
+        _emailSender = emailSender;
+        _logger = logger;
     }
 
     // ============================================
@@ -248,29 +254,51 @@ public class PortfolioController : ControllerBase
     /// POST /api/messages - Envoyer un message de contact (public)
     /// </summary>
     [HttpPost("messages")]
-    public async Task<IActionResult> PostMessage([FromBody] Message message)
+    [EnableRateLimiting("contact")]
+    [RequestSizeLimit(16_384)]
+    public async Task<IActionResult> PostMessage([FromBody] ContactRequest request, CancellationToken ct)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(new { success = false, message = "Données invalides" });
+        // Champ piège rempli : robot. Réponse neutre, rien n'est enregistré ni envoyé.
+        if (!string.IsNullOrEmpty(request.Website))
+            return Ok(new { success = true, message = "Message envoyé avec succès !" });
 
-        message.DateEnvoi = DateTime.UtcNow;
-        message.Lu = false;
-        
-        _context.Messages.Add(message);
-        await _context.SaveChangesAsync();
+        request.Nom = request.Nom.Trim();
+        request.Email = request.Email.Trim();
+        request.Sujet = request.Sujet.Trim();
+        request.Contenu = request.Contenu.Trim();
 
-        return CreatedAtAction(nameof(GetMessages), new { id = message.Id }, new {
-            success = true,
-            data = new {
-                message.Id,
-                message.Nom,
-                message.Email,
-                message.Sujet,
-                message.Lu,
-                message.DateEnvoi
-            },
-            message = "Message envoyé avec succès !"
-        });
+        var message = new Message
+        {
+            Nom = request.Nom,
+            Email = request.Email,
+            Sujet = request.Sujet,
+            Contenu = request.Contenu,
+            DateEnvoi = DateTime.UtcNow,
+            Lu = false
+        };
+
+        try
+        {
+            _context.Messages.Add(message);
+            await _context.SaveChangesAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Échec de l'enregistrement du message de contact");
+            return StatusCode(500, new { success = false, message = "Votre message n'a pas pu être enregistré. Réessayez plus tard." });
+        }
+
+        try
+        {
+            await _emailSender.SendContactAsync(request, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Échec de l'envoi de l'e-mail pour le message {MessageId}", message.Id);
+            return StatusCode(502, new { success = false, message = "Votre message n'a pas pu être envoyé. Réessayez plus tard ou contactez-moi via LinkedIn." });
+        }
+
+        return Ok(new { success = true, message = "Message envoyé avec succès ! Je vous répondrai rapidement." });
     }
 
     /// <summary>

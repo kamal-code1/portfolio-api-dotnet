@@ -22,7 +22,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends tzdata \
 
 COPY --from=build /app/out .
 
-# Expose port
-EXPOSE 7000
+# Render route le trafic HTTPS vers le port 10000 du conteneur
+ENV ASPNETCORE_HTTP_PORTS=10000
+EXPOSE 10000
+
+# Exécution sans privilèges root
+USER $APP_UID
 
 ENTRYPOINT ["dotnet", "PortfolioAPI.dll"]

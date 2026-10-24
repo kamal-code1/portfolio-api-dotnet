@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using PortfolioAPI.Data;
@@ -26,6 +27,7 @@ public class AuthController : ControllerBase
     /// POST /api/auth/login - Connexion et obtention du JWT
     /// </summary>
     [HttpPost("login")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.MotDePasse))
@@ -94,8 +96,13 @@ public class AuthController : ControllerBase
     /// POST /api/auth/register - Inscription d'un nouvel utilisateur (Optionnel)
     /// </summary>
     [HttpPost("register")]
+    [EnableRateLimiting("auth")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
+        // Inscription publique désactivée sauf si Auth:AllowRegistration=true
+        if (!_configuration.GetValue<bool>("Auth:AllowRegistration"))
+            return NotFound();
+
         if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.MotDePasse))
             return BadRequest(new { 
                 success = false, 

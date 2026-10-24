@@ -1,0 +1,27 @@
+# Blueprint Render : service web Docker, offre gratuite.
+# Les valeurs marquées sync: false sont saisies dans le tableau de bord Render, jamais dans ce dépôt.
+services:
+  - type: web
+    name: portfolio-api-dotnet
+    runtime: docker
+    plan: free
+    branch: main
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      # SQLite dans le conteneur : réinitialisée à chaque redéploiement (les messages sont aussi envoyés par e-mail).
+      # Pour une base persistante, remplacer par une chaîne PostgreSQL (ex. Neon, offre gratuite).
+      - key: ConnectionStrings__DefaultConnection
+        value: Data Source=/tmp/portfolio.db
+      - key: Jwt__Key
+        generateValue: true
+      - key: Email__Provider
+        value: Resend
+      - key: Email__From
+        value: Portfolio <onboarding@resend.dev>
+      - key: Email__To
+        sync: false
+      - key: Email__ResendApiKey
+        sync: false
