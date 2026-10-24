@@ -1,0 +1,22 @@
+# Build
+bin/
+obj/
+out/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Bases locales
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets et configuration locale
+.env
+.env.*
+appsettings.*.local.json
+appsettings.Development.json

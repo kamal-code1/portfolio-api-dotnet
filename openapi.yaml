@@ -1,0 +1,823 @@
+openapi: 3.0.3
+info:
+  title: Portfolio Kamal API
+  version: 1.0.0
+  description: |
+    API pour gérer les projets, compétences, expériences, formations, messages et utilisateurs du Portfolio Kamal.
+    Développé avec ASP.NET Core 8.0 et PostgreSQL.
+  contact:
+    name: Kamal Drissi El-Bouzaidi
+    url: https://github.com/kamal-code1
+
+servers:
+  - url: http://localhost:7000
+    description: Serveur local de développement
+  - url: http://localhost:7000
+    description: Docker Container
+
+tags:
+  - name: Projets
+    description: Gestion des projets du portfolio
+  - name: Compétences
+    description: Gestion des compétences techniques
+  - name: Expériences
+    description: Gestion des expériences professionnelles
+  - name: Formations
+    description: Gestion des formations académiques
+  - name: Messages
+    description: Gestion des messages de contact
+  - name: Utilisateurs
+    description: Gestion des utilisateurs et administration
+  - name: Auth
+    description: Authentication et autorisation
+
+paths:
+  # ============================================
+  # AUTHENTIFICATION
+  # ============================================
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Connexion et obtention du JWT
+      description: Authentifie un utilisateur et retourne un token JWT
+      operationId: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - motDePasse
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: admin@example.com
+                motDePasse:
+                  type: string
+                  format: password
+                  example: "<mot-de-passe>"
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      nomComplet:
+                        type: string
+                      email:
+                        type: string
+                      expiration:
+                        type: string
+                        format: date-time
+        '400':
+          description: Données invalides
+        '401':
+          description: Email ou mot de passe incorrect
+
+  /api/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Inscription d'un nouvel utilisateur
+      description: Crée un nouveau compte utilisateur
+      operationId: Register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - motDePasse
+              properties:
+                nomComplet:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                motDePasse:
+                  type: string
+                  format: password
+                  example: password123
+      responses:
+        '200':
+          description: Compte créé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      nomComplet:
+                        type: string
+                      email:
+                        type: string
+        '400':
+          description: Email déjà utilisé ou données invalides
+
+  # ============================================
+  # PROJETS
+  # ============================================
+  /api/portfolio/projets:
+    get:
+      tags:
+        - Projets
+      summary: Récupérer tous les projets actifs
+      description: Retourne la liste de tous les projets actifs triés par ordre
+      operationId: GetProjets
+      responses:
+        '200':
+          description: Liste de projets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        titre:
+                          type: string
+                          example: AquaFeed Smart
+                        description:
+                          type: string
+                          example: Plateforme IoT de supervision et d'irrigation automatisée
+                        lien:
+                          type: string
+                          example: https://github.com/kamal/project
+                        lienGithub:
+                          type: string
+                        imageUrl:
+                          type: string
+                        dateCreation:
+                          type: string
+                          format: date-time
+                        technologies:
+                          type: array
+                          items:
+                            type: string
+                          example: ["React", "Node.js", "PostgreSQL"]
+                  message:
+                    type: string
+        '500':
+          description: Erreur serveur
+    post:
+      tags:
+        - Projets
+      summary: Créer un nouveau projet
+      description: Ajoute un nouveau projet au portfolio (JWT requis)
+      operationId: CreateProjet
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - titre
+                - description
+              properties:
+                titre:
+                  type: string
+                  example: Mon Projet
+                description:
+                  type: string
+                  example: Description du projet
+                lien:
+                  type: string
+                  example: https://monprojet.com
+                lienGithub:
+                  type: string
+                  example: https://github.com/user/repo
+                imageUrl:
+                  type: string
+                  example: /images/project.jpg
+                ordre:
+                  type: integer
+                  example: 1
+                technologies:
+                  type: array
+                  items:
+                    type: string
+                  example: ["React", "Node.js"]
+      responses:
+        '201':
+          description: Projet créé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                  message:
+                    type: string
+        '400':
+          description: Données invalides
+        '401':
+          description: Non autorisé - JWT requis
+
+  # ============================================
+  # COMPÉTENCES
+  # ============================================
+  /api/portfolio/competences:
+    get:
+      tags:
+        - Compétences
+      summary: Récupérer toutes les compétences
+      description: Retourne la liste de toutes les compétences triées par ordre
+      operationId: GetCompetences
+      responses:
+        '200':
+          description: Liste des compétences
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        nom:
+                          type: string
+                          example: ASP.NET Core
+                        categorie:
+                          type: string
+                          example: Backend
+                        niveau:
+                          type: integer
+                          example: 90
+                        ordre:
+                          type: integer
+                          example: 1
+                        icone:
+                          type: string
+                  message:
+                    type: string
+
+  /api/portfolio/competences/grouped:
+    get:
+      tags:
+        - Compétences
+      summary: Récupérer les compétences groupées par catégorie
+      description: Retourne les compétences organisées par catégorie
+      operationId: GetCompetencesGrouped
+      responses:
+        '200':
+          description: Compétences groupées par catégorie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                          nom:
+                            type: string
+                          niveau:
+                            type: integer
+                          icone:
+                            type: string
+
+  # ============================================
+  # EXPÉRIENCES
+  # ============================================
+  /api/portfolio/experiences:
+    get:
+      tags:
+        - Expériences
+      summary: Récupérer toutes les expériences
+      description: Retourne la liste des expériences professionnelles triées par date
+      operationId: GetExperiences
+      responses:
+        '200':
+          description: Liste des expériences
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        titre:
+                          type: string
+                        entreprise:
+                          type: string
+                        description:
+                          type: string
+                        dateDebut:
+                          type: string
+                          format: date
+                        dateFin:
+                          type: string
+                          format: date
+                        enCours:
+                          type: boolean
+                  message:
+                    type: string
+    post:
+      tags:
+        - Expériences
+      summary: Créer une nouvelle expérience
+      description: Ajoute une nouvelle expérience professionnelle (JWT requis)
+      operationId: CreateExperience
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                titre:
+                  type: string
+                entreprise:
+                  type: string
+                description:
+                  type: string
+                dateDebut:
+                  type: string
+                  format: date
+                dateFin:
+                  type: string
+                  format: date
+                enCours:
+                  type: boolean
+      responses:
+        '201':
+          description: Expérience créée avec succès
+        '400':
+          description: Données invalides
+        '401':
+          description: Non autorisé
+
+  # ============================================
+  # FORMATIONS
+  # ============================================
+  /api/portfolio/formations:
+    get:
+      tags:
+        - Formations
+      summary: Récupérer toutes les formations
+      description: Retourne la liste des formations académiques triées par année
+      operationId: GetFormations
+      responses:
+        '200':
+          description: Liste des formations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        titre:
+                          type: string
+                        etablissement:
+                          type: string
+                        description:
+                          type: string
+                        anneeDebut:
+                          type: integer
+                        anneeFin:
+                          type: integer
+                  message:
+                    type: string
+    post:
+      tags:
+        - Formations
+      summary: Créer une nouvelle formation
+      description: Ajoute une nouvelle formation académique (JWT requis)
+      operationId: CreateFormation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                titre:
+                  type: string
+                etablissement:
+                  type: string
+                description:
+                  type: string
+                anneeDebut:
+                  type: integer
+                anneeFin:
+                  type: integer
+      responses:
+        '201':
+          description: Formation créée avec succès
+        '400':
+          description: Données invalides
+        '401':
+          description: Non autorisé
+
+  # ============================================
+  # MESSAGES
+  # ============================================
+  /api/portfolio/messages:
+    get:
+      tags:
+        - Messages
+      summary: Récupérer tous les messages
+      description: Retourne la liste des messages de contact (JWT requis)
+      operationId: GetMessages
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Liste des messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        nom:
+                          type: string
+                        email:
+                          type: string
+                        sujet:
+                          type: string
+                        contenu:
+                          type: string
+                        lu:
+                          type: boolean
+                        dateEnvoi:
+                          type: string
+                          format: date-time
+        '401':
+          description: Non autorisé
+
+    post:
+      tags:
+        - Messages
+      summary: Envoyer un message de contact
+      description: Permet aux visiteurs d'envoyer un message via le formulaire de contact
+      operationId: PostMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nom
+                - email
+                - sujet
+                - contenu
+              properties:
+                nom:
+                  type: string
+                  example: Jean Dupont
+                email:
+                  type: string
+                  format: email
+                  example: jean@example.com
+                sujet:
+                  type: string
+                  example: Demande de renseignements
+                contenu:
+                  type: string
+                  example: Bonjour, je voudrais...
+      responses:
+        '201':
+          description: Message envoyé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Données invalides
+
+  /api/portfolio/messages/{id}/lu:
+    put:
+      tags:
+        - Messages
+      summary: Marquer un message comme lu
+      description: Marque un message spécifique comme lu (JWT requis)
+      operationId: MarkMessageAsRead
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID du message à marquer comme lu
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Message marqué comme lu
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '404':
+          description: Message non trouvé
+        '401':
+          description: Non autorisé
+
+  # ============================================
+  # UTILISATEURS
+  # ============================================
+  /api/portfolio/utilisateurs:
+    get:
+      tags:
+        - Utilisateurs
+      summary: Liste des utilisateurs
+      description: Retourne la liste de tous les utilisateurs (JWT requis)
+      operationId: GetUtilisateurs
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Liste des utilisateurs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        nomComplet:
+                          type: string
+                        email:
+                          type: string
+                        role:
+                          type: string
+                          enum: [Admin, User]
+                        createdAt:
+                          type: string
+                          format: date-time
+        '401':
+          description: Non autorisé
+
+  /api/portfolio/me:
+    get:
+      tags:
+        - Utilisateurs
+      summary: Profil de l'administrateur connecté
+      description: Retourne les informations de l'utilisateur connecté via le JWT
+      operationId: GetCurrentUser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profil récupéré avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      nomComplet:
+                        type: string
+                      email:
+                        type: string
+                      role:
+                        type: string
+                  message:
+                    type: string
+        '401':
+          description: Token invalide ou absent
+        '404':
+          description: Utilisateur non trouvé
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token d'authentification. Obtenu via `/api/auth/login`.
+        Exemple: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Message d'erreur détaillé
+
+    Projet:
+      type: object
+      properties:
+        id:
+          type: integer
+        titre:
+          type: string
+        description:
+          type: string
+        lien:
+          type: string
+        lienGithub:
+          type: string
+        imageUrl:
+          type: string
+        dateCreation:
+          type: string
+          format: date-time
+        technologies:
+          type: array
+          items:
+            type: string
+
+    Competence:
+      type: object
+      properties:
+        id:
+          type: integer
+        nom:
+          type: string
+        categorie:
+          type: string
+        niveau:
+          type: integer
+        ordre:
+          type: integer
+        icone:
+          type: string
+
+    Experience:
+      type: object
+      properties:
+        id:
+          type: integer
+        titre:
+          type: string
+        entreprise:
+          type: string
+        description:
+          type: string
+        dateDebut:
+          type: string
+          format: date
+        dateFin:
+          type: string
+          format: date
+        enCours:
+          type: boolean
+
+    Formation:
+      type: object
+      properties:
+        id:
+          type: integer
+        titre:
+          type: string
+        etablissement:
+          type: string
+        description:
+          type: string
+        anneeDebut:
+          type: integer
+        anneeFin:
+          type: integer
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+        nom:
+          type: string
+        email:
+          type: string
+        sujet:
+          type: string
+        contenu:
+          type: string
+        lu:
+          type: boolean
+        dateEnvoi:
+          type: string
+          format: date-time
+
+    Utilisateur:
+      type: object
+      properties:
+        id:
+          type: integer
+        nomComplet:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+externalDocs:
+  description: Documentation Swagger UI
+  url: http://localhost:7000/swagger
