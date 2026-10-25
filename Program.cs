@@ -57,15 +57,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Configuration CORS
+// Configuration CORS : origines autorisées dans Cors:AllowedOrigins (variables Cors__AllowedOrigins__0, __1…)
+// Par défaut, uniquement les serveurs de développement locaux ; le site public (wwwroot) est servi par l'API elle-même
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? new[] { "http://localhost:4200", "http://localhost:5173" };
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
-        policy.WithOrigins(
-            "http://localhost:4200",
-            "http://localhost:5173",
-            "https://kamal-portfolio.vercel.app"
-        )
+        policy.WithOrigins(allowedOrigins)
         .AllowAnyHeader()
         .AllowAnyMethod());
 });

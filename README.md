@@ -45,6 +45,7 @@ Aucun secret n'est versionné. L'application refuse de démarrer si la connexion
 | `Admin:Email` | `Admin__Email` | Optionnel : compte admin créé au premier démarrage |
 | `Admin:Password` | `Admin__Password` | Optionnel : mot de passe de ce compte |
 | `Auth:AllowRegistration` | `Auth__AllowRegistration` | Optionnel, `false` par défaut : désactive `/api/auth/register` |
+| `Cors:AllowedOrigins` | `Cors__AllowedOrigins__0`, `__1`… | Optionnel : origines autorisées pour un front-end séparé. Par défaut `http://localhost:4200` et `http://localhost:5173` |
 
 ## Formulaire de contact
 
@@ -82,7 +83,7 @@ docker run -p 10000:10000 -e ConnectionStrings__DefaultConnection="Data Source=/
 
 ## Tests
 
-Tests d'intégration xUnit (`tests/PortfolioAPI.Tests`) : l'API démarre en mémoire avec `WebApplicationFactory`, une base SQLite temporaire et un faux service d'e-mail. Ils couvrent `/health`, la lecture des projets, les en-têtes de sécurité, l'authentification JWT (rôle Admin, refus sans jeton, inscription désactivée) et le formulaire de contact (validation, champ piège, échec d'envoi, limite de débit).
+Tests d'intégration xUnit (`tests/PortfolioAPI.Tests`) : l'API démarre en mémoire avec `WebApplicationFactory`, une base SQLite temporaire et un faux service d'e-mail. Ils couvrent `/health`, la lecture des projets, les en-têtes de sécurité, l'authentification JWT (rôle Admin, refus sans jeton, inscription désactivée), la politique CORS et le formulaire de contact (validation, champ piège, échec d'envoi, limite de débit).
 
 ```bash
 dotnet test tests/PortfolioAPI.Tests

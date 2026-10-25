@@ -164,3 +164,36 @@ public class ContactTests : IClassFixture<PortfolioApiFactory>
         Assert.Equal(HttpStatusCode.TooManyRequests, limite.StatusCode);
     }
 }
+
+public class CorsTests : IClassFixture<PortfolioApiFactory>
+{
+    private readonly HttpClient _client;
+
+    public CorsTests(PortfolioApiFactory factory) => _client = factory.CreateClient();
+
+    private async Task<HttpResponseMessage> Preflight(string origin)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Options, "/api/portfolio/projets");
+        request.Headers.Add("Origin", origin);
+        request.Headers.Add("Access-Control-Request-Method", "GET");
+        return await _client.SendAsync(request);
+    }
+
+    [Fact]
+    public async Task Cors_OrigineLocaleParDefaut_EstAutorisee()
+    {
+        var response = await Preflight("http://localhost:5173");
+
+        Assert.Equal("http://localhost:5173", response.Headers.GetValues("Access-Control-Allow-Origin").Single());
+    }
+
+    [Theory]
+    [InlineData("https://kamal-portfolio.vercel.app")]
+    [InlineData("https://site-inconnu.example")]
+    public async Task Cors_OrigineNonConfiguree_EstRefusee(string origin)
+    {
+        var response = await Preflight(origin);
+
+        Assert.False(response.Headers.Contains("Access-Control-Allow-Origin"));
+    }
+}
