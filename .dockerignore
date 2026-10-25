@@ -5,3 +5,4 @@ obj/
 *.db
 .env
 .env.*
+tests/
