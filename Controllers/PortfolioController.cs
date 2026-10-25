@@ -43,6 +43,8 @@ public class PortfolioController : ControllerBase
                 p.Titre,
                 p.Description,
                 p.Lien,
+                p.LienGithub,
+                p.ImageUrl,
                 p.DateCreation,
                 Technologies = p.Technologies.Select(t => t.Nom).ToList()
             })

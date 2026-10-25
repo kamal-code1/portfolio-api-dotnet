@@ -1,5 +1,7 @@
 # PortfolioAPI
 
+[![CI](https://github.com/kamal-code1/portfolio-api-dotnet/actions/workflows/ci.yml/badge.svg)](https://github.com/kamal-code1/portfolio-api-dotnet/actions/workflows/ci.yml)
+
 API REST en ASP.NET Core 8 qui fournit les données d'un portfolio de développeur : projets, compétences, expériences, formations et messages de contact. Les opérations d'écriture et la lecture des messages sont réservées au rôle Admin (JWT) ; l'inscription publique crée un rôle User sans privilèges.
 
 ## Stack
@@ -9,6 +11,7 @@ API REST en ASP.NET Core 8 qui fournit les données d'un portfolio de développe
 - Authentification JWT Bearer, mots de passe hachés avec BCrypt
 - Swagger / OpenAPI (`openapi.yaml`)
 - Dockerfile multi-étapes
+- Tests d'intégration xUnit + GitHub Actions
 
 ## Endpoints
 
@@ -70,14 +73,22 @@ dotnet run
 
 Swagger est disponible sur `/swagger` en environnement Development. La base est créée au démarrage (`EnsureCreated`), avec des compétences et projets d'exemple.
 
-Tests : le projet ne contient pas encore de tests automatisés.
-
 Avec Docker :
 
 ```bash
 docker build -t portfolio-api .
 docker run -p 10000:10000 -e ConnectionStrings__DefaultConnection="Data Source=/tmp/portfolio.db" -e Jwt__Key="..." -e Email__Provider=Resend -e Email__To="..." -e Email__ResendApiKey="..." portfolio-api
 ```
+
+## Tests
+
+Tests d'intégration xUnit (`tests/PortfolioAPI.Tests`) : l'API démarre en mémoire avec `WebApplicationFactory`, une base SQLite temporaire et un faux service d'e-mail. Ils couvrent `/health`, la lecture des projets, les en-têtes de sécurité, l'authentification JWT (rôle Admin, refus sans jeton, inscription désactivée) et le formulaire de contact (validation, champ piège, échec d'envoi, limite de débit).
+
+```bash
+dotnet test tests/PortfolioAPI.Tests
+```
+
+La CI GitHub Actions (`.github/workflows/ci.yml`) compile le projet et lance ces tests à chaque push et pull request.
 
 ## Auteur
 

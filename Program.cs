@@ -215,3 +215,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
+
+// Rend la classe Program accessible aux tests d'intégration (WebApplicationFactory)
+public partial class Program { }
